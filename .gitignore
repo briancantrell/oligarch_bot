@@ -1,0 +1,7 @@
+bin/
+corpus/
+.bundle/
+.DS_Store
+.env
+tags
+
