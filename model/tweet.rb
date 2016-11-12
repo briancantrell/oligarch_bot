@@ -9,13 +9,14 @@ class RandomTweetWithSponsorInfo
 
   attribute :tweet, Twitter::Tweet
   attribute :congress_member, String
-  attribute :contributors, Array
+  attribute :contributor, Hash
 
   def self.get
     random_legislator = with_contributor_data(
       Legislators.legislators_on_twitter
     ).sample
     contributors = Contributors.for(random_legislator["cid"])
+    random_contributor = contributors.sample
     timeline = client.user_timeline random_legislator["twitter_id"]
     # timeline.reject! { |t| t.text.length > (140 - rando_sponsor_msg.length) }
 
@@ -23,8 +24,8 @@ class RandomTweetWithSponsorInfo
       random_tweet = timeline.sample
       new(
         tweet: random_tweet,
-        congress_member: random_legislator["firstlast"],
-        contributors: contributors
+        congress_member: random_legislator,
+        contributor: random_contributor
       )
     end
   rescue Twitter::Error::NotFound
