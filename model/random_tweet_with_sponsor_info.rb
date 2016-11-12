@@ -7,25 +7,27 @@ require 'virtus'
 class RandomTweetWithSponsorInfo
   include Virtus.model
 
-  attribute :tweet, Twitter::Tweet
+  attribute :original_tweet_id, Integer
+  attribute :text, String
   attribute :congress_member, String
-  attribute :contributors, Array
 
-  def self.get
-    random_legislator = with_contributor_data(
-      Legislators.legislators_on_twitter
-    ).sample
-    contributors = Contributors.for(random_legislator["cid"])
-    timeline = client.user_timeline random_legislator["twitter_id"]
-    # timeline.reject! { |t| t.text.length > (140 - rando_sponsor_msg.length) }
+  def self.generate_tweet
+    rando_leg = with_contributor_data(Legislators.legislators_on_twitter).sample
+    rando_contributor = Contributors.for(rando_leg["cid"]).sample
+    rando_sponsor_msg = " - Sponsored by #{rando_contributor['org_name']}"
+
+    timeline = client.user_timeline rando_leg["twitter_id"]
+    timeline.reject! { |t| t.text.length > (140 - rando_sponsor_msg.length) }
 
     if timeline.any?
-      random_tweet = timeline.sample
+      original_tweet = timeline.sample
       new(
-        tweet: random_tweet,
-        congress_member: random_legislator["firstlast"],
-        contributors: contributors
+        original_tweet_id: original_tweet.id,
+        text: original_tweet.text + rando_sponsor_msg,
+        congress_member: rando_leg["firstlast"]
       )
+    else
+      generate_tweet
     end
   rescue Twitter::Error::NotFound
     puts "toot?"
