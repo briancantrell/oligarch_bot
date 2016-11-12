@@ -9,6 +9,7 @@ class Tweet
 
   attribute :original_tweet_id, Integer
   attribute :text, String
+  attribute :congress_member, String
 
   def self.generate_tweet
     rando_leg = with_contributor_data(Legislators.legislators_on_twitter).sample
